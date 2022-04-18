@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.1",
-	"minAppVersion": "0.12.0",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"isDesktopOnly": false
+  "id": "sync-obsidian",
+  "name": "Sync",
+  "version": "1.0.1",
+  "minAppVersion": "0.12.0",
+  "description": "ali-oss aws-s3 Storage Service Synchronization",
+  "author": "taotao7",
+  "authorUrl": "https://github.com/taotao7",
+  "isDesktopOnly": true
 }
