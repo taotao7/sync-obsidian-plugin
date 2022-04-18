@@ -10,9 +10,25 @@ import {
 	Setting,
 } from "obsidian";
 
-// Remember to rename these classes and interfaces!
+interface Settings {
+	accessKeyId: string;
+	accessSecretId: string;
+	region: string;
+	bucket: string;
+	service: string;
+}
+
+const defaultSettings: Settings = {
+	accessKeyId: "",
+	accessSecretId: "",
+	region: "",
+	bucket: "",
+	service: "",
+};
 
 export default class MyPlugin extends Plugin {
+	settings: Settings;
+
 	async onload() {
 		// sync Icon
 		addIcon(
@@ -25,9 +41,41 @@ export default class MyPlugin extends Plugin {
 			"Sync",
 			(evt: MouseEvent) => {
 				// Called when the user clicks the icon
+				new Modal(this.app).open();
 			}
 		);
+
+		// This creates a tab in the settings panel.
+		this.addSettingTab(new SyncSetting(this.app, this));
 	}
 
 	onunload() {}
+}
+
+class SyncSetting extends PluginSettingTab {
+	plugin: MyPlugin;
+
+	constructor(app: App, plugin: MyPlugin) {
+		super(app, plugin);
+		this.plugin = plugin;
+	}
+
+	display(): void {
+		const { containerEl } = this;
+
+		containerEl.empty();
+
+		containerEl.createEl("h2", { text: "Settings your OSS account." });
+
+		new Setting(containerEl).setName("accessKeyId").addText((text) =>
+			text
+				.setPlaceholder("Enter your accessKeyId")
+				.setValue(this.plugin.settings.accessKeyId)
+				.onChange(async (value) => {
+					console.log("Secret: " + value);
+					this.plugin.settings.accessKeyId = value;
+					// await this.plugin.saveSettings();
+				})
+		);
+	}
 }
