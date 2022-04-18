@@ -1,7 +1,7 @@
 {
   "id": "sync-obsidian",
   "name": "Sync",
-  "version": "1.0.1",
+  "version": "0.0.1",
   "minAppVersion": "0.12.0",
   "description": "ali-oss aws-s3 Storage Service Synchronization",
   "author": "taotao7",
