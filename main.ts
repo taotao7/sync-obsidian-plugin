@@ -9,10 +9,11 @@ import {
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
+import OSS from "ali-oss";
 
 interface Settings {
 	accessKeyId: string;
-	accessSecretId: string;
+	accessKeySecret: string;
 	region: string;
 	bucket: string;
 	service: string;
@@ -20,7 +21,7 @@ interface Settings {
 
 const defaultSettings: Settings = {
 	accessKeyId: "",
-	accessSecretId: "",
+	accessKeySecret: "",
 	region: "",
 	bucket: "",
 	service: "",
@@ -30,6 +31,28 @@ export default class MyPlugin extends Plugin {
 	settings: Settings;
 
 	async onload() {
+		await this.loadingSetting();
+		// init oss client
+		let client: OSS;
+		const basePath = this.app.vault.adapter.basePath;
+		const fs = this.app.vault.adapter.fs;
+
+		// if setting params init OSS
+		if (
+			this.settings.accessKeyId &&
+			this.settings.accessKeySecret &&
+			this.settings.region &&
+			this.settings.bucket &&
+			this.settings.service
+		) {
+			client = new OSS({
+				accessKeyId: this.settings.accessKeyId,
+				accessKeySecret: this.settings.accessKeySecret,
+				region: this.settings.region,
+				bucket: this.settings.bucket,
+			});
+		}
+
 		// sync Icon
 		addIcon(
 			"syncIcon",
@@ -41,15 +64,30 @@ export default class MyPlugin extends Plugin {
 			"Sync",
 			(evt: MouseEvent) => {
 				// Called when the user clicks the icon
-				new Modal(this.app).open();
+				// new Modal(this.app).open();
+				console.log(basePath);
+				console.log(fs);
 			}
 		);
+		ribbonIconEl.addClass("my-plugin-ribbon-class");
 
 		// This creates a tab in the settings panel.
 		this.addSettingTab(new SyncSetting(this.app, this));
 	}
 
 	onunload() {}
+
+	async loadingSetting() {
+		this.settings = Object.assign(
+			{},
+			defaultSettings,
+			await this.loadData()
+		);
+	}
+
+	async saveSetting() {
+		await this.saveData(this.settings);
+	}
 }
 
 class SyncSetting extends PluginSettingTab {
@@ -62,19 +100,51 @@ class SyncSetting extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
-
 		containerEl.empty();
-
 		containerEl.createEl("h2", { text: "Settings your OSS account." });
-
 		new Setting(containerEl).setName("accessKeyId").addText((text) =>
 			text
 				.setPlaceholder("Enter your accessKeyId")
 				.setValue(this.plugin.settings.accessKeyId)
 				.onChange(async (value) => {
-					console.log("Secret: " + value);
 					this.plugin.settings.accessKeyId = value;
-					// await this.plugin.saveSettings();
+					await this.plugin.saveSetting();
+				})
+		);
+		new Setting(containerEl).setName("accessKeySecret").addText((text) =>
+			text
+				.setPlaceholder("Enter your accessKeySecret")
+				.setValue(this.plugin.settings.accessKeySecret)
+				.onChange(async (value) => {
+					this.plugin.settings.accessKeySecret = value;
+					await this.plugin.saveSetting();
+				})
+		);
+		new Setting(containerEl).setName("region").addText((text) =>
+			text
+				.setPlaceholder("Enter your region")
+				.setValue(this.plugin.settings.region)
+				.onChange(async (value) => {
+					this.plugin.settings.region = value;
+					await this.plugin.saveSetting();
+				})
+		);
+		new Setting(containerEl).setName("bucket").addText((text) =>
+			text
+				.setPlaceholder("Enter your bucket")
+				.setValue(this.plugin.settings.bucket)
+				.onChange(async (value) => {
+					this.plugin.settings.bucket = value;
+					await this.plugin.saveSetting();
+				})
+		);
+		new Setting(containerEl).setName("service").addText((text) =>
+			text
+				.setPlaceholder("Enter your service")
+				.setValue(this.plugin.settings.service)
+				.onChange(async (value) => {
+					this.plugin.settings.service = value;
+					await this.plugin.saveSetting();
 				})
 		);
 	}
