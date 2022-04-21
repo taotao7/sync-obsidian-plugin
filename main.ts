@@ -9,6 +9,7 @@ import {
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
+import { calculatePath, queueTask } from "utils";
 import OSS from "ali-oss";
 
 interface Settings {
@@ -29,13 +30,15 @@ const defaultSettings: Settings = {
 
 export default class MyPlugin extends Plugin {
 	settings: Settings;
+	fs: any;
+	basePath: string;
+	client: OSS;
 
 	async onload() {
 		await this.loadingSetting();
 		// init oss client
-		let client: OSS;
-		const basePath = this.app.vault.adapter.basePath;
-		const fs = this.app.vault.adapter.fs;
+		this.basePath = this.app.vault.adapter.basePath;
+		this.fs = this.app.vault.adapter.fs;
 
 		// if setting params init OSS
 		if (
@@ -45,7 +48,7 @@ export default class MyPlugin extends Plugin {
 			this.settings.bucket &&
 			this.settings.service
 		) {
-			client = new OSS({
+			this.client = new OSS({
 				accessKeyId: this.settings.accessKeyId,
 				accessKeySecret: this.settings.accessKeySecret,
 				region: this.settings.region,
@@ -63,10 +66,23 @@ export default class MyPlugin extends Plugin {
 			"syncIcon",
 			"Sync",
 			(evt: MouseEvent) => {
-				// Called when the user clicks the icon
-				// new Modal(this.app).open();
-				console.log(basePath);
-				console.log(fs);
+				const fileList: string[][] = [];
+				// calculate file list
+				calculatePath(this.fs, this.basePath, fileList);
+				console.log(fileList);
+				// for (let i = 0; i < 5; i++) {
+				// 	this.client
+				// 		.put(fileList[i][0], fileList[i][1])
+				// 		.then((r) => {
+				// 			console.log("succes----->", r);
+				// 		})
+				// 		.catch((e) => {
+				// 			console.log("error--->", e);
+				// 		});
+				// }
+				// queueTask(fileList, this.client.putStream)
+				// 	.then((r) => console.log(r))
+				// 	.catch((e) => console.log(e));
 			}
 		);
 		ribbonIconEl.addClass("my-plugin-ribbon-class");
@@ -102,6 +118,7 @@ class SyncSetting extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		containerEl.createEl("h2", { text: "Settings your OSS account." });
+		// setting item
 		new Setting(containerEl).setName("accessKeyId").addText((text) =>
 			text
 				.setPlaceholder("Enter your accessKeyId")
